@@ -31,6 +31,9 @@ def set(address, value):
     else:
         instructions[address] = value
 
+for i in range(5489, 5498):
+    instructions[i] = 21
+
 def save():
     with open("save.py", "w") as f:
         f.write("registers = "+str( registers))
@@ -214,7 +217,7 @@ def load():
             print("unimplemented instruction error: ", instr)
             break
 
-
+load()
 #_ + _ * _^2 + _^3 - _ = 399      
     
 #5. ZwLmZgLCNEzW
@@ -227,27 +230,109 @@ def load():
 
 #6. NMYcHLveqGZd
 
+
+r7 = 3
 def call(r0, r1):
     if r0 == 0:
         r0 = r1 + 1
-        return
+        return [r0, r1]
     if r1 == 0:
         r0 -= 1
-        r1 = 32775
-        call(r0,r1)
-        return
-    stack.append(r0)
-    r1-=1
-    call(r0,r1)
+        r1 = r7
+        return call(r0, r1)
+    temp = r0
+    r1 -= 1
+    r0, r1 = call(r0, r1)
     r1 = r0
-    r0 = stack.pop()
-    r0 = r0-1
-    call(r0,r1)
-    return
+    r0 = temp
+    r0 -= 1
+    return call(r0, r1)
+
+#from functools import cache
+import sys
+import math
+sys.setrecursionlimit(33000)
+
+def sumTriangle(n):
+    if n == 0:
+        return ((1,3,1),(1,2,1))
+    current, adds = sumTriangle(n-1)
+    current = list(current)
+    adds = list(adds)
+    
+    current.insert(0, 0)
+    newAdds = [0] * (len(adds) + 1)
+    newAdds[0] = 1
+    newAdds[-1] = 1
+    for i in range(1, len(adds)):
+        newAdds[i] = adds[i-1] + adds[i]
+
+    for i in range(len(newAdds)):
+        current[i] += newAdds[i]
+        
+    return (tuple(current), tuple(newAdds))
+
+def getCoefficients(n):
+    v = [1,3,1]
+    for row in range(3,n+3):
+        v.insert(0,0)
+        for col in range(row + 1):
+            v[row - col] += math.comb(row, col)
+    return v
+
+def call(r0, r1):
+    if r0 == 1:
+        return r7 + r1 + 1
+    if r0 == 2:
+        return ((r1 + 2) * r7 + r1 + 1) % 32767
+    if r0 == 3:
+        coefficients = getCoefficients(r1)[::-1]
+        total = 0
+        for i in range(len(coefficients)):
+            total += coefficients[i] * pow(r7, i, 32767)
+        return total % 32767
+        
+    if r1 == 0:
+        return call(r0-2, call(r0-1, r7-1))
+    
+    return call(r0 - 1, call(r0,r1-1) % 32767) % 32767
+
+    
+    #print(r0, r1)
+    while r0 != 0:
+        
+        if r1 == 0:
+            r0 -= 1
+            r1 = r7
+            continue
+        
+        r1 -= 1
+
+        #print("calling with ", r0, r1)
+        r1 = call(r0, r1)
+        #print("got result", r0, r1)
+        
+        r0 -= 1
+    return r1 + 1
+
 #r0 has to be 6 at the end of this?
 #32775 is the interesting register
 
 #1 - 4,1
 #5 - 4,1
 
+#
+# for i in range(430,32767):
+#     r7 = i
+#     c = call(4,0)
+#
+#
+#     if c > 1000:
+#         #print("skipping", i)
+#         continue
+#     c = call(4,1)
+#     print("i: ", i, "call(4,1)", c)
+#     if c == 6:
+#         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+#
     
